@@ -1,5 +1,12 @@
+import ApplyLeave from "./Components/ApplyLeave";
+
+
 function App() {
-  return <h1>Employee Leave Management System</h1>;
-  
+  <h1>Employee Leave Management System</h1>
+  return (
+   <div>
+      <ApplyLeave />
+    </div>
+  )
 }
 export default App;
