@@ -1,119 +1,130 @@
-import express from 'express';
-import cors from 'cors';
-import pool from './db.js';
+import 'dotenv/config'
+import express from 'express'
+import cors from 'cors'
+import pool from './db.js'
 
-const app = express();
-const PORT = 5000;
+const app = express()
+const PORT = process.env.PORT || 5000
 
-app.use(cors());  
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
+// logger
 app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
-});
+  console.log(new Date().toISOString(), req.method, req.url)
+  next()
+})
 
-//apply for leave
+// health check
+app.get('/api/health', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT NOW() as now')
+    return res.json({ status: 'ok', now: r.rows[0].now })
+  } catch (err) {
+    console.error('HEALTH DB ERROR', err.stack || err)
+    return res.status(500).json({ status: 'db-fail', error: err.message })
+  }
+})
+
+// ---------------------------
+// DATE NORMALIZER (corrected)
+// ---------------------------
+function normalizeToIso(input) {
+  if (!input) return null
+  const s = String(input).trim()
+
+  // already ISO yyyy-mm-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+
+  const parts = s.split(/[-/]/)
+  if (parts.length !== 3) return null
+
+  // case 1: DD-MM-YYYY
+  if (parts[2].length === 4) {
+    const [d, m, y] = parts
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+  }
+
+  // case 2: YYYY-DD-MM (malformed)
+  if (parts[0].length === 4) {
+    const [y, d, m] = parts
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+  }
+
+  return null
+}
+
+// ---------------------------
+// APPLY FOR LEAVE
+// ---------------------------
 app.post('/apply', async (req, res) => {
-  const { emp_id, leave_type_id, start_date, end_date, status_id, remarks } = req.body;
-  
+  console.log('POST /apply body', req.body)
+
+  const { emp_id, leave_type_id, start_date, end_date, status_id, remarks } = req.body
+
   if (!emp_id || !leave_type_id || !start_date || !end_date) {
-    return res.status(400).json({ success: false, message: "Please provide all required fields" });
-  } 
+    return res.status(400).json({ success: false, message: 'missing required fields' })
+  }
+
+  const empIdNum = Number(emp_id)
+  const leaveTypeNum = Number(leave_type_id)
+
+  const sd = normalizeToIso(start_date)
+  const ed = normalizeToIso(end_date)
+
+  if (!sd || !ed) {
+    return res.status(400).json({ success: false, message: 'invalid date format', start_date: sd, end_date: ed })
+  }
+
+const start = new Date(start_date);
+const end = new Date(end_date);
+
+const requestedDays =
+  Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+if (requestedDays <= 0) {
+  return res.status(400).json({ message: 'Invalid date range' });
+}
+
 
   try {
-    const query = `
-      INSERT INTO leave_requests
-      (emp_id, leave_type_id, start_date, end_date, status_id, applied_on, remarks)
-      VALUES ($1, $2, $3, $4, $5, NOW(), $6)
-      RETURNING *`;
-    
-    // Only 6 values now
-    const result = await pool.query(query, [emp_id, leave_type_id, start_date, end_date, status_id, remarks]);
-    
-    res.json({ success: true, leave: result.rows[0] });
+    const text = `
+  INSERT INTO leave_requests
+  (emp_id, leave_type_id, start_date, end_date, no_of_days, status_id, applied_on, remarks)
+VALUES ($1, $2, $3, $4, $5, 1, NOW(), $6)
+  RETURNING *
+`
+
+const params = [
+  emp_id,
+  leave_type_id,
+  start_date,
+  end_date,
+  remarks || null
+];
+
+
+    console.log('QUERY', text.replace(/\s+/g,' '), 'PARAMS', params)
+
+    const result = await pool.query(text, params)
+    return res.status(201).json({ success: true, leave: result.rows[0] })
+
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error('POST /apply ERROR', err.stack || err)
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      constraint: err.constraint
+    })
   }
-});
+})
 
-//Get my leaves
-app.get('/my/:emp_id', async (req, res) => {
-  const { emp_id } = req.params;
-  try {
-    const query = 
-      `SELECT lr.leave_id, lt.type_name, lr.start_date, lr.end_date, ls.status_name, lr.applied_on, lr.approved_on, lr.remarks, lr.no_of_days
-FROM leave_requests lr
-      JOIN leave_types lt ON lr.leave_type_id = lt.leave_type_id
-      JOIN leave_status ls ON lr.status_id = ls.status_id
-      WHERE lr.emp_id = $1
-      ORDER BY lr.applied_on DESC`;
-    const result = await pool.query(query, [emp_id]);
-    res.json({ success: true, leaves: result.rows });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
-// Get all leave types
-app.get('/leave-types', async (req, res) => {
-  try {
-    const query = `SELECT leave_type_id, type_name FROM leave_types ORDER BY leave_type_id`;
-    const result = await pool.query(query);
-    res.json(result.rows); // returns array of leave types
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
+// global error
+app.use((err, req, res, next) => {
+  console.error('UNHANDLED', err.stack || err)
+  res.status(500).json({ error: 'unhandled', message: err.message })
+})
 
-//Get pending leaves by (Admin)
-//Get pending leaves by (Admin)
-app.get('/pending', async (req, res) => {
-  try {
-    const query = `
-      SELECT lr.leave_id,
-             e.emp_id,
-             e.name AS emp_name,
-             lt.leave_type_id,
-             lt.type_name,
-             lr.start_date,
-             lr.end_date,
-             lr.applied_on,
-             lr.no_of_days
-      FROM leave_requests lr
-      JOIN employees e ON lr.emp_id = e.emp_id
-      JOIN leave_types lt ON lr.leave_type_id = lt.leave_type_id
-      WHERE lr.status_id = 1
-      ORDER BY lr.applied_on ASC`;
-    
-    const result = await pool.query(query);
-    res.json({ success: true, leaves: result.rows });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
-
-
-//Approve / Reject Leave by (Admin) 
-app.put('/update/:leave_id', async (req, res) => {
-  const { leave_id } = req.params;
-  const { status_id, approved_by, remarks } = req.body; // status_id: 2=Approved,3=Rejected,4=Cancelled
-  try {
-    const query = `
-      UPDATE leave_requests
-      SET status_id = $1, approved_by = $2, approved_on = NOW(), remarks = $3
-      WHERE leave_id = $4
-      RETURNING *`;
-    const result = await pool.query(query, [status_id, approved_by, remarks, leave_id]);
-    res.json({ success: true, leave: result.rows[0] });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
-
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
