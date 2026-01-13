@@ -1,37 +1,81 @@
-🚀 Employee Leave Management System (ELMS)
+PulseHR
 
-🧩 About
-A full-stack web application to manage employee leave workflows with role-based access.
-Employees apply for leaves, managers and HR review requests, and the system tracks leave balances automatically.
+Full-stack employee leave management system to handle leave requests, approvals, and leave balances with role-based access.
 
-✨ Key Features
-• 🔐 Secure authentication using bcrypt password hashing and JWT
-• 👥 Role-based access for Employee, Manager, and HR
-• 🗓️ Leave application with date validation and balance checks
-• ✅ Approve or ❌ reject leave requests with remarks
-• 📉 Automatic leave balance deduction on approval
-• 🔄 RESTful APIs backed by PostgreSQL
-• ⚙️ Environment-based configuration using dotenv
+Overview
 
-🛠️ Tech Stack
-• 🎨 Frontend: React, JavaScript, HTML, CSS
-• 🧠 Backend: Node.js, Express
-• 🗄️ Database: PostgreSQL
-• 🔑 Authentication: JWT, bcrypt
-• 🔧 Tools: Git, Postman
+PulseHR lets employees apply for leave, while managers and HR review, approve, or reject requests. The system tracks leave balances and enforces workflow rules.
 
-📁 Project Structure
-• 📂 client → React frontend
-• 📂 server → Express backend and APIs
-• 📄 database_schema.sql → Database schema
+Tech Stack
 
-⚙️ Setup Instructions
-• 📥 Clone the repository
-• 🧾 Create a .env file using .env.example
-• 🔧 Update database credentials
-• 📦 Install dependencies in both client and server
-• ▶️ Start backend and frontend servers
+Frontend React
+Backend Node.js, Express.js
+Database PostgreSQL
+Authentication JWT, bcrypt
+Deployment Docker support
 
-🧪 Demo Credentials
-• 👤 Demo users available for testing
-• 🔐 Passwords are securely hashed
+Core Features
+
+• Leave application submission and validation
+• Role-based access for employee, manager, HR
+• Approve or reject leave requests with comments
+• Automatic leave balance update
+• Secure login with hashed passwords
+• REST APIs with PostgreSQL integration
+
+System Flow
+
+Employee login → Apply leave → Manager/HR review → Approve/Reject → Balance update
+
+Setup
+
+Clone repository
+```bash
+git clone https://github.com/krishfr/PulseHR.git
+cd PulseHR
+```
+
+Install frontend dependencies
+```bash
+cd client
+npm install
+```
+
+Install backend dependencies
+```bash
+cd ../server
+npm install
+```
+
+Environment variables
+```bash
+DATABASE_URL=your_postgres_url
+JWT_SECRET=your_jwt_key
+```
+
+Run locally
+```bash
+docker-compose up
+```
+
+Access Application
+```bash
+http://localhost:3000
+```
+
+Use Cases
+
+• HR leave tracking and automation
+• Manager leave approvals
+• Employee self-service for leave requests
+• Small to midsize company HR tool
+
+Future Enhancements
+
+• Email notifications on leave status
+• Leave analytics dashboard
+• Multi-tenant support
+
+Author
+
+Krish Chaudhari
