@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: pulsehr-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: process.env.DB_PASSWORD
+      POSTGRES_DB: elms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build: ./server
+    container_name: pulsehr-server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    depends_on:
+      - postgres
+
+  client:
+    build: ./client
+    container_name: pulsehr-client
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+volumes:
+  pgdata:
