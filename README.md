@@ -1,81 +1,124 @@
-PulseHR
+# PulseHR
 
-Full-stack employee leave management system to handle leave requests, approvals, and leave balances with role-based access.
+Role-based employee leave management system that streamlines leave requests, approvals, and leave balance tracking through a centralized workflow.
 
-Overview
+## Overview
 
-PulseHR lets employees apply for leave, while managers and HR review, approve, or reject requests. The system tracks leave balances and enforces workflow rules.
+PulseHR is a full-stack web application designed to simplify leave management for employees, managers, and HR teams.
 
-Tech Stack
+Employees can submit leave requests, track approval status, and monitor leave history. Managers and HR personnel can review requests, approve or reject applications, and maintain accurate leave records through a dedicated admin dashboard.
 
-Frontend React
-Backend Node.js, Express.js
-Database PostgreSQL
-Authentication JWT, bcrypt
-Deployment Docker support
+The project was built to explore authentication, role-based authorization, workflow automation, REST API development, and full-stack application deployment.
 
-Core Features
+## Tech Stack
 
-• Leave application submission and validation
-• Role-based access for employee, manager, HR
-• Approve or reject leave requests with comments
-• Automatic leave balance update
-• Secure login with hashed passwords
-• REST APIs with PostgreSQL integration
+### Frontend
 
-System Flow
+* React.js
 
-Employee login → Apply leave → Manager/HR review → Approve/Reject → Balance update
+### Backend
 
-Setup
+* Node.js
+* Express.js
 
-Clone repository
+### Database
+
+* PostgreSQL
+
+### Authentication
+
+* JWT Authentication
+* bcrypt Password Hashing
+
+### DevOps
+
+* Docker
+* Docker Compose
+
+## Core Features
+
+* Secure login and authentication using JWT
+* Role-based access control for Employee, Manager, and HR users
+* Leave application submission with validation
+* Admin dashboard for reviewing pending leave requests
+* Leave approval and rejection workflow
+* Automatic leave balance calculation and updates
+* Leave history tracking for employees
+* RESTful APIs integrated with PostgreSQL
+* Containerized deployment using Docker
+
+## System Workflow
+
+Employee Login → Leave Application → Manager/HR Review → Approval or Rejection → Leave Balance Update → Leave History Tracking
+
+## Setup
+
+### Clone Repository
+
 ```bash
 git clone https://github.com/krishfr/PulseHR.git
 cd PulseHR
 ```
 
-Install frontend dependencies
+### Install Frontend Dependencies
+
 ```bash
 cd client
 npm install
 ```
 
-Install backend dependencies
+### Install Backend Dependencies
+
 ```bash
 cd ../server
 npm install
 ```
 
-Environment variables
+### Environment Variables
+
 ```bash
 DATABASE_URL=your_postgres_url
-JWT_SECRET=your_jwt_key
+JWT_SECRET=your_jwt_secret
 ```
 
-Run locally
+## Run Locally
+
 ```bash
 docker-compose up
 ```
 
-Access Application
+## Access Application
+
 ```bash
 http://localhost:3000
 ```
 
-Use Cases
+## Use Cases
 
-• HR leave tracking and automation
-• Manager leave approvals
-• Employee self-service for leave requests
-• Small to midsize company HR tool
+* Employee leave request management
+* HR leave tracking and record maintenance
+* Manager approval workflows
+* Small and medium-sized organization HR operations
+* Internal workforce management systems
 
-Future Enhancements
+## Key Learnings
 
-• Email notifications on leave status
-• Leave analytics dashboard
-• Multi-tenant support
+* Designing role-based authentication and authorization systems
+* Building secure REST APIs with Express.js
+* Managing relational data using PostgreSQL
+* Implementing workflow-driven business logic
+* Debugging authorization and role-mapping issues in production-like environments
+* Containerizing full-stack applications with Docker
+* Managing frontend, backend, and database services through Docker Compose
 
-Author
+## Future Enhancements
 
-Krish Chaudhari
+* Email notifications for leave status updates
+* Leave analytics and reporting dashboard
+* Calendar integration
+* Multi-organization support
+* AWS cloud deployment
+
+## Author
+
+**Krish Chaudhari**
