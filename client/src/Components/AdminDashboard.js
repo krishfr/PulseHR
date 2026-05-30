@@ -15,6 +15,7 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       const res = await api.get('/pending');
+      console.log("PENDING RESPONSE =>", res.data);
       if (res.data.success) {
         setPendingLeaves(res.data.leaves);
       }

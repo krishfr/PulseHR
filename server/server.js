@@ -6,16 +6,19 @@ import pool from './db.js';
 
 
 // sync leave_id sequence to avoid duplicate key errors
-(async () => {
-  try {
-    await pool.query(
-      `SELECT setval('leave_requests_leave_id_seq', COALESCE((SELECT MAX(leave_id) FROM leave_requests), 0))`
-    );
-    console.log('leave_id sequence synced');
-  } catch (e) {
-    console.error('Failed to sync leave_id sequence', e.stack || e);
-  }
-})();
+// setTimeout(async () => {
+//   try {
+//     await pool.query(
+// `SELECT setval(
+// 'leave_requests_leave_id_seq',
+// COALESCE((SELECT MAX(leave_id) FROM leave_requests), 1)
+// )`
+// );
+//     console.log('leave_id sequence synced');
+//   } catch (e) {
+//     console.error('Failed to sync leave_id sequence', e.stack || e);
+//   }
+// }, 10000);
 
 
 const app = express();
@@ -147,9 +150,7 @@ app.put('/api/employees/:emp_id/leave', async (req, res) => {
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password required' });
-  }
+  console.log("LOGIN REQUEST =>", { email, password });
 
   try {
     const result = await pool.query(
@@ -157,21 +158,38 @@ app.post('/login', async (req, res) => {
       [email]
     );
 
+    console.log("ROWS FOUND =>", result.rows.length);
+
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({
+        message: 'User not found'
+      });
     }
 
     const user = result.rows[0];
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    console.log("DB USER =>", user);
+    console.log("INPUT PASSWORD =>", password);
+    console.log("DB PASSWORD =>", user.password);
+
+    if (password !== user.password) {
+      console.log("PASSWORD MISMATCH");
+      return res.status(401).json({
+        message: 'Invalid credentials'
+      });
     }
 
+    console.log("LOGIN SUCCESS");
+
     const token = jwt.sign(
-      { emp_id: user.emp_id, role: user.role },
+      {
+        emp_id: user.emp_id,
+        role: user.role
+      },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      {
+        expiresIn: '1d'
+      }
     );
 
     res.json({
@@ -183,9 +201,12 @@ app.post('/login', async (req, res) => {
         role: user.role
       }
     });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Login failed' });
+    console.error("LOGIN ERROR =>", err);
+    res.status(500).json({
+      message: 'Login failed'
+    });
   }
 });
 
@@ -341,7 +362,7 @@ app.get('/my/:emp_id', async (req, res) => {
 app.get(
   '/pending',
   verifyJWT,
-  allowRoles(['manager', 'hr']),
+  allowRoles(['manager', 'hr', 'admin']),
   async (req, res) => {
     const result = await pool.query(`
       SELECT
@@ -384,7 +405,7 @@ app.get('/leave-types', async (req, res) => {
 app.put(
   '/update/:leave_id',
   verifyJWT,
-  allowRoles(['manager', 'hr']),
+  allowRoles(['manager', 'hr', 'admin']),
   async (req, res) => {
     try {
       const { leave_id } = req.params;

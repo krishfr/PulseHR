@@ -18,7 +18,11 @@ function App() {
 
     const role = user.role?.toLowerCase().trim();
 
-    if (role === 'manager' || role === 'hr') {
+    if (
+  role === 'manager' ||
+  role === 'hr' ||
+  role === 'admin'
+)  {
       setCurrentView('admin');
     } else {
       setCurrentView('apply');
@@ -76,7 +80,8 @@ function App() {
           )}
 
           {(normalizedRole === 'manager' ||
-            normalizedRole === 'hr') && (
+ normalizedRole === 'hr' ||
+ normalizedRole === 'admin') && (
             <button
               className={currentView === 'admin' ? 'active' : ''}
               onClick={() => setCurrentView('admin')}
@@ -105,8 +110,11 @@ function App() {
         )}
 
         {(currentView === 'admin' &&
-          (normalizedRole === 'manager' ||
-            normalizedRole === 'hr')) && (
+ (
+  normalizedRole === 'manager' ||
+  normalizedRole === 'hr' ||
+  normalizedRole === 'admin'
+ )) && (
           <AdminDashboard />
         )}
       </main>

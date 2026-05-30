@@ -6,7 +6,7 @@ services:
     container_name: pulsehr-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: process.env.DB_PASSWORD
+      POSTGRES_PASSWORD: krish@123
       POSTGRES_DB: elms
     ports:
       - "5433:5432"
@@ -16,6 +16,7 @@ services:
   server:
     build: ./server
     container_name: pulsehr-server
+    restart: unless-stopped
     ports:
       - "5000:5000"
     env_file:
